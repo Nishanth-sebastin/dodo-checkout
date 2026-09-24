@@ -4,7 +4,8 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "e2e",
   timeout: 30_000,
-  use: { baseURL: "http://localhost:5173", headless: true },
+  // DEMO_URL / CHECKOUT_URL point the suite at a deployment instead of local dev servers.
+  use: { baseURL: process.env.DEMO_URL ?? "http://localhost:5173", headless: true },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
@@ -12,7 +13,7 @@ export default defineConfig({
     { name: "mobile-safari", use: { ...devices["iPhone 13"] } },
   ],
   workers: 1,
-  webServer: {
+  webServer: process.env.DEMO_URL ? undefined : {
     command: "npm run dev",
     url: "http://localhost:5174/sdk/v1.js",
     reuseExistingServer: true,

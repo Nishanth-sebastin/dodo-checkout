@@ -14,7 +14,7 @@ A checkout any site can embed with one script tag and one function call. The car
 </script>
 ```
 
-**Live demo:** _add link after deploying_ · **Test cards:** `4242 4242 4242 4242` succeeds · `4000 0000 0000 0002` declines · `4000 0000 0000 0341` fails once, then succeeds on retry
+**Live demo:** https://dodo-checkout-demo-ashy.vercel.app (checkout + SDK served from https://dodo-checkout-app.vercel.app) · **Test cards:** `4242 4242 4242 4242` succeeds · `4000 0000 0000 0002` declines · `4000 0000 0000 0341` fails once, then succeeds on retry
 
 ![Checkout](docs/01-form.png)
 
@@ -158,7 +158,20 @@ docs/                          screenshots of each state
 
 ## Deploying
 
-The checkout and the demo must be on **different origins**, which here means two deployments:
+The checkout and the demo must be on **different origins**, so they're two Vercel projects:
 
-1. Deploy `apps/checkout` (build: `npm run build:sdk && npm -w apps/checkout run build`, output `apps/checkout/dist`). Its `vercel.json` sets the security headers.
-2. Deploy `apps/demo` with `VITE_CHECKOUT_ORIGIN=https://<checkout-deployment>` (build: `npm -w apps/demo run build`, output `apps/demo/dist`).
+```bash
+# 1. Checkout (serves the app and /sdk/v1.js). Ship its vercel.json for the security headers.
+npm run build:sdk && npm -w apps/checkout run build
+cp apps/checkout/vercel.json apps/checkout/dist/ && npx vercel deploy apps/checkout/dist --prod
+
+# 2. Demo, pointed at the checkout's origin (no trailing slash)
+VITE_CHECKOUT_ORIGIN=https://<checkout-host> npm -w apps/demo run build
+npx vercel deploy apps/demo/dist --prod
+```
+
+Run the end-to-end suite against a deployment instead of local dev servers:
+
+```bash
+DEMO_URL=https://dodo-checkout-demo-ashy.vercel.app CHECKOUT_URL=https://dodo-checkout-app.vercel.app npx playwright test
+```

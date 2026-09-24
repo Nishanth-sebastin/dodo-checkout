@@ -1,6 +1,6 @@
 import { expect, test, type Frame, type Page } from "@playwright/test";
 
-const CHECKOUT = "http://localhost:5174";
+const CHECKOUT = process.env.CHECKOUT_URL ?? "http://localhost:5174";
 
 async function openCheckout(page: Page, trigger: () => Promise<void>): Promise<Frame> {
   // A previous checkout may still be fading out; wait for a frame that's new.
@@ -144,7 +144,7 @@ test("misusing the API throws immediately", async ({ page }) => {
 
 test("checkout that never loads: onError, a visible message, focus on Close", async ({ page }) => {
   // Block the checkout document itself, as if its host were down.
-  await page.route(/localhost:5174\/\?embed=/, (route) => route.abort());
+  await page.route((url) => url.origin === new URL(CHECKOUT).origin && url.searchParams.has("embed"), (route) => route.abort());
   await page.clock.install();
   await page.locator('button.buy[data-product="prod_123"]').click();
   await page.clock.fastForward(11_000);
