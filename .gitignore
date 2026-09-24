@@ -1,0 +1,8 @@
+node_modules
+dist
+apps/checkout/public/sdk
+.DS_Store
+*.log
+.vercel
+test-results
+playwright-report

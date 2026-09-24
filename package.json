@@ -1,0 +1,23 @@
+{
+  "name": "dodo-checkout",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run build:sdk && concurrently -k -n sdk,checkout,demo -c blue,magenta,green \"npm:watch:sdk\" \"npm -w apps/checkout run dev\" \"npm -w apps/demo run dev\"",
+    "build:sdk": "npm -w packages/sdk run build",
+    "watch:sdk": "npm -w packages/sdk run watch",
+    "build": "npm run build:sdk && npm -w apps/checkout run build && npm -w apps/demo run build",
+    "typecheck": "tsc -p packages/sdk && tsc -p apps/checkout && tsc -p apps/demo",
+    "test": "npm -w apps/checkout run test",
+    "e2e": "playwright test",
+    "screens": "node e2e/screens.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "typescript": "^5.6.0"
+  }
+}

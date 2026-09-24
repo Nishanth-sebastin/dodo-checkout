@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nimbus Labs — demo store</title>
+    <!-- The one line a merchant adds. Served by the checkout origin, not by this site. -->
+    <script src="%VITE_CHECKOUT_ORIGIN%/sdk/v1.js"></script>
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <span class="logo"><span class="logo-mark" aria-hidden="true"></span>Nimbus Labs</span>
+        <span class="demo-tag">Demo store · checkout by Dodo</span>
+      </div>
+    </header>
+
+    <main class="wrap layout">
+      <section class="store" aria-labelledby="store-title">
+        <h1 id="store-title">Tools for people who write things down.</h1>
+        <p class="lede">A pretend store embedding the Dodo checkout. Hit Buy — the checkout opens right here, and the card never touches this page.</p>
+
+        <div class="products">
+          <article class="product">
+            <div class="art art-notes" aria-hidden="true"></div>
+            <div class="product-body">
+              <h2>Nimbus Notes Pro</h2>
+              <p>Unlimited notebooks, offline sync, and AI summaries.</p>
+              <div class="product-foot">
+                <span class="price">$12<span class="per">/month</span></span>
+                <button class="buy" data-product="prod_123">Buy</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product">
+            <div class="art art-book" aria-hidden="true"></div>
+            <div class="product-body">
+              <h2>Field Guide to Type</h2>
+              <p>A 240-page ebook on typography for product teams.</p>
+              <div class="product-foot">
+                <span class="price">$29</span>
+                <button class="buy" data-product="prod_456">Buy</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <details class="lab" open>
+          <summary>Try the weird states</summary>
+          <div class="lab-grid">
+            <label class="opt">
+              <span>Theme</span>
+              <select id="opt-theme">
+                <option value="auto">Auto</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+            <label class="opt">
+              <span>Accent</span>
+              <input id="opt-accent" type="color" value="#5b3df5" />
+            </label>
+            <label class="opt">
+              <span>Prefill email</span>
+              <input id="opt-email" type="email" placeholder="you@example.com" />
+            </label>
+          </div>
+          <div class="lab-actions">
+            <button class="ghost" id="double-buy">Double-click Buy</button>
+            <button class="ghost" id="missing-product">Buy a product that doesn't exist</button>
+            <button class="ghost" id="host-close">Open, then close() from the host after 4s</button>
+            <button class="ghost" id="bad-options">Misuse the API (no productId)</button>
+          </div>
+          <p class="hint">Test cards: <code>4242 4242 4242 4242</code> succeeds · <code>4000 0000 0000 0002</code> declines · <code>4000 0000 0000 0341</code> fails once, then succeeds. Toggle DevTools → Network → Offline to see the offline state.</p>
+        </details>
+      </section>
+
+      <aside class="log-panel" aria-labelledby="log-title">
+        <div class="log-head">
+          <h2 id="log-title">Callback log</h2>
+          <button class="ghost small" id="clear-log">Clear</button>
+        </div>
+        <p class="log-sub">Everything this page is told. Note what's missing: no card number, no email, no declines.</p>
+        <ol id="log" class="log" aria-live="polite"></ol>
+      </aside>
+    </main>
+  </body>
+</html>
