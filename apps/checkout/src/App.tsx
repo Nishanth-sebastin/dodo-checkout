@@ -55,7 +55,6 @@ export function App() {
       if (!versionSupported(c.init)) {
         c.send({ type: "error", code: "version_mismatch", message: "This version of the SDK isn't supported by the checkout." });
         setStage({ kind: "unavailable", title: "Checkout needs an update", body: "The store is using an outdated checkout. Nothing was charged." });
-        c.send({ type: "ready" });
         return;
       }
       const product = findProduct(c.init.config.productId);
@@ -65,7 +64,6 @@ export function App() {
       } else {
         setStage({ kind: "paying", product });
       }
-      c.send({ type: "ready" });
     });
   }, []);
 
@@ -98,6 +96,16 @@ export function App() {
   );
 
   const dialogRef = useFocusTrap<HTMLDivElement>(stage.kind !== "connecting");
+
+  // Say "ready" only once there's something on screen. The SDK focuses the
+  // iframe on ready; if that happens before the form exists, Safari and
+  // Firefox leave keyboard focus on <body> and the customer has to click.
+  const readySent = useRef(false);
+  useEffect(() => {
+    if (!conn || stage.kind === "connecting" || readySent.current) return;
+    readySent.current = true;
+    conn.send({ type: "ready" });
+  }, [conn, stage.kind]);
 
   if (!isEmbedded) return <Standalone />;
   if (!conn || stage.kind === "connecting") return null; // the SDK shows its own spinner

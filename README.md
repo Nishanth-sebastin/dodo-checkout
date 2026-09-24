@@ -24,7 +24,7 @@ A checkout any site can embed with one script tag and one function call. The car
 npm install
 npm run dev          # demo store on :5173, checkout + SDK on :5174
 npm test             # unit tests (card validation, fake processor)
-npx playwright test  # end-to-end: every edge case below, in a real browser
+npx playwright test  # end-to-end: every edge case below, in Chrome, Safari (WebKit), Firefox and iPhone Safari
 npm run build        # production builds of all three pieces
 ```
 
@@ -107,10 +107,17 @@ DodoCheckout.open(opts)
 | Host callback throws | Caught and logged; checkout keeps working. |
 | Opened directly, not in an iframe | A short explanation of how to embed it, instead of a broken form. |
 
+## Tested in
+
+11 end-to-end scenarios × 4 browsers (Chromium, WebKit/Safari, Firefox, iPhone 13 Safari) = 44 passing runs, plus unit tests for card validation and the fake processor.
+
+**One Safari-specific behavior worth knowing:** Safari doesn't let a cross-origin iframe move keyboard focus by itself until the customer interacts with it. So when the checkout opens there, focus can't be forced into the email field, and after an async decline it can't be forced back onto the card. Rather than fight that, the checkout **defers the move to the customer's next keystroke**: the first key typed lands in the email field, and after a decline the next key goes to the card number, with the old number selected so typing replaces it. No keystroke is lost. Chrome and Firefox get the focus moves immediately. (Also: Safari on macOS doesn't focus a button when you click it, so "return focus to the Buy button" only applies to keyboard users there.)
+
 ## Craft details
 
 - The dialog is a real modal: focus trap, Esc, focus returned to the Buy button on close, page scroll locked (with scrollbar-width compensation so the page doesn't jump).
-- Field errors appear on blur or submit, not while typing. They're linked with `aria-describedby`/`aria-invalid`; banners use `role="alert"`.
+- Field errors appear when you leave a field you've filled in, or when you press Pay — never while typing, and never just for tabbing past an empty field.
+- While paying, fields go read-only rather than disabled, so keyboard focus stays where the customer left it. They're linked with `aria-describedby`/`aria-invalid`; banners use `role="alert"`.
 - Correct `autocomplete` values (`email`, `cc-number`, `cc-exp`, `cc-csc`) and `inputmode="numeric"`, so autofill and mobile keyboards work.
 - A bottom sheet on phones, with the Pay button within thumb reach.
 - Motion is short (≤220ms) and turns off under `prefers-reduced-motion`.
@@ -145,7 +152,7 @@ packages/sdk/src/protocol.ts   message types + validators shared by both sides
 apps/checkout/src/lib/         bridge, card validation, fake processor, catalog, focus trap
 apps/checkout/src/components/  Shell, PaymentForm, SuccessView, BrandMark
 apps/demo/                     the pretend store + callback log + weird-state buttons
-e2e/checkout.spec.ts           end-to-end tests for every row in the table above
+e2e/checkout.spec.ts           end-to-end tests for every row in the table above (4 browsers)
 docs/                          screenshots of each state
 ```
 

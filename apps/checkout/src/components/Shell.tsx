@@ -60,8 +60,11 @@ export const Shell = forwardRef<HTMLDivElement, ShellProps>(function Shell(
         </header>
         <div className="body">{children}</div>
         <footer className="foot">
-          <span>
-            Secured by <strong>Dodo Payments</strong>
+          <span className="foot-brand">
+            <ShieldIcon />
+            <span>
+              Secured by <strong>Dodo Payments</strong>
+            </span>
           </span>
           <span className="foot-note">{hostLabel} never sees your card details</span>
         </footer>
@@ -74,6 +77,14 @@ function LockIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
       <path fill="currentColor" d="M5 7V5a3 3 0 1 1 6 0v2h.5A1.5 1.5 0 0 1 13 8.5v5A1.5 1.5 0 0 1 11.5 15h-7A1.5 1.5 0 0 1 3 13.5v-5A1.5 1.5 0 0 1 4.5 7H5Zm1.5 0h3V5a1.5 1.5 0 0 0-3 0v2Z" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+      <path fill="currentColor" d="M8 1 2.5 3v4.3c0 3.4 2.3 6.3 5.5 7.7 3.2-1.4 5.5-4.3 5.5-7.7V3L8 1Zm-.9 9.6L4.6 8.1l1-1 1.5 1.5 3.3-3.3 1 1-4.3 4.3Z" />
     </svg>
   );
 }

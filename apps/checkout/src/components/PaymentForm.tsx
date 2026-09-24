@@ -16,6 +16,7 @@ import { formatMoney, type Product } from "../lib/catalog";
 import { TEST_CARDS, type Processor } from "../lib/processor";
 import { useOnline } from "../lib/useOnline";
 import { BrandMark } from "./BrandMark";
+import { focusSoon } from "../lib/useFocusTrap";
 
 type FieldName = "email" | "card" | "expiry" | "cvc";
 
@@ -55,6 +56,8 @@ export function PaymentForm({ product, sessionId, initialEmail, processor, onBus
     expiry: expiryError(values.expiry),
     cvc: cvcError(values.cvc, brand),
   };
+  // Errors show once a field has been filled and left, or on Pay. Leaving an
+  // empty field isn't a mistake yet — the customer may just be looking around.
   const shown = (f: FieldName) => (touched[f] ? errors[f] : null);
   const price = formatMoney(product.amount, product.currency);
 
@@ -134,17 +137,20 @@ export function PaymentForm({ product, sessionId, initialEmail, processor, onBus
         </div>
       </section>
 
-      <fieldset disabled={submitting} className="fields">
+      {/* Read-only rather than disabled while paying: disabling drops focus to
+          <body>, and some browsers won't let us put it back. */}
+      <fieldset className="fields" aria-disabled={submitting || undefined}>
         <Field label="Email" hint="For your receipt" error={shown("email")} id="email">
           <input
             ref={refs.email}
             id="email"
+            readOnly={submitting}
             type="email"
             autoComplete="email"
             spellCheck={false}
             value={values.email}
             onChange={(e) => set("email", e.target.value)}
-            onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+            onBlur={(e) => e.target.value && setTouched((t) => ({ ...t, email: true }))}
             data-autofocus={initialEmail ? undefined : ""}
             {...ariaFor("email", shown("email"))}
           />
@@ -157,6 +163,7 @@ export function PaymentForm({ product, sessionId, initialEmail, processor, onBus
               <input
                 ref={refs.card}
                 id="card"
+                readOnly={submitting}
                 inputMode="numeric"
                 autoComplete="cc-number"
                 placeholder="1234 1234 1234 1234"
@@ -169,7 +176,7 @@ export function PaymentForm({ product, sessionId, initialEmail, processor, onBus
                   // Move on only when the number is complete *and* plausible.
                   if (isCardComplete(next) && !cardNumberError(next)) refs.expiry.current?.focus();
                 }}
-                onBlur={() => setTouched((t) => ({ ...t, card: true }))}
+                onBlur={(e) => e.target.value && setTouched((t) => ({ ...t, card: true }))}
                 {...ariaFor("card", shown("card"))}
               />
               <BrandMark brand={brand} />
@@ -178,6 +185,7 @@ export function PaymentForm({ product, sessionId, initialEmail, processor, onBus
               <input
                 ref={refs.expiry}
                 id="expiry"
+                readOnly={submitting}
                 inputMode="numeric"
                 autoComplete="cc-exp"
                 placeholder="MM / YY"
@@ -191,12 +199,13 @@ export function PaymentForm({ product, sessionId, initialEmail, processor, onBus
                 onKeyDown={(e) => {
                   if (e.key === "Backspace" && values.expiry === "") refs.card.current?.focus();
                 }}
-                onBlur={() => setTouched((t) => ({ ...t, expiry: true }))}
+                onBlur={(e) => e.target.value && setTouched((t) => ({ ...t, expiry: true }))}
                 {...ariaFor("expiry", shown("expiry"))}
               />
               <input
                 ref={refs.cvc}
                 id="cvc"
+                readOnly={submitting}
                 inputMode="numeric"
                 autoComplete="cc-csc"
                 placeholder={brand === "amex" ? "4 digits" : "CVC"}
@@ -207,7 +216,7 @@ export function PaymentForm({ product, sessionId, initialEmail, processor, onBus
                 onKeyDown={(e) => {
                   if (e.key === "Backspace" && values.cvc === "") refs.expiry.current?.focus();
                 }}
-                onBlur={() => setTouched((t) => ({ ...t, cvc: true }))}
+                onBlur={(e) => e.target.value && setTouched((t) => ({ ...t, cvc: true }))}
                 {...ariaFor("cvc", shown("cvc"))}
               />
             </div>
@@ -225,7 +234,8 @@ export function PaymentForm({ product, sessionId, initialEmail, processor, onBus
       <div aria-live="assertive" className="banner-slot">
         {banner && (
           <div className={`banner ${banner.tone}`} role={banner.tone === "error" ? "alert" : "status"}>
-            <span>{banner.text}</span>
+            <BannerIcon tone={banner.tone} />
+            <span className="banner-text">{banner.text}</span>
             {banner.tone === "error" && banner.retry && (
               <button ref={retryRef} type="button" className="link-btn" onClick={() => pay()} disabled={submitting}>
                 Try again
@@ -247,7 +257,7 @@ export function PaymentForm({ product, sessionId, initialEmail, processor, onBus
       </button>
       <p id="pay-note" className="muted small center">
         {submitting
-          ? "Don't close this window — it only takes a moment."
+          ? "Confirming with your bank — this takes a moment."
           : product.interval
             ? `Renews ${product.interval.replace("per ", "every ")}. Cancel anytime.`
             : "One-time payment. Taxes included."}
@@ -269,6 +279,21 @@ export function PaymentForm({ product, sessionId, initialEmail, processor, onBus
         </ul>
       </details>
     </form>
+  );
+}
+
+function BannerIcon({ tone }: { tone: "error" | "info" }) {
+  return tone === "error" ? (
+    <svg className="banner-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 4.5v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="8" cy="11.2" r="0.9" fill="currentColor" />
+    </svg>
+  ) : (
+    <svg className="banner-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M2 6.5a9 9 0 0 1 12 0M4.3 8.8a5.6 5.6 0 0 1 7.4 0M6.6 11a2.3 2.3 0 0 1 2.8 0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M2 2l12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
   );
 }
 
@@ -297,14 +322,10 @@ function ariaFor(field: FieldName, error: string | null) {
 }
 
 function focusAndSelect(el: HTMLInputElement | null) {
-  // After the fieldset re-enables, not before, or focus is dropped.
-  requestAnimationFrame(() => {
-    el?.focus();
-    el?.select();
-  });
+  focusSoon(el, { select: true });
 }
 
 /** Focus an element that doesn't exist until the next render. */
 function focusLater(get: () => HTMLElement | null) {
-  requestAnimationFrame(() => requestAnimationFrame(() => get()?.focus()));
+  requestAnimationFrame(() => focusSoon(get()));
 }
